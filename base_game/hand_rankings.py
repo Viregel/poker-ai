@@ -174,6 +174,8 @@ def getSuites(hand):
     return suites
 
 def isRoyalFlush(hand):
+    #TODO: Problem with how this executes.
+    #Needs to be more specific in how it's executing.
 
     if len(getSuites(hand)) > 1:
         return False
@@ -185,10 +187,10 @@ def isRoyalFlush(hand):
         card_values.append(card.value)
     card_values.sort()
 
-    for i in range(len(royal_flush_values)):
-        if card_values[i] != royal_flush_values[i]:
+    #TODO: Do they need to be same suite?
+    for r in royal_flush_values:
+        if r not in card_values:
             return False
-
     return True
 
 def isStraightFlush(hand):
