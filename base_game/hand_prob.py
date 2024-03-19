@@ -2,10 +2,18 @@
 #Essentially want to use Bayesian probability
 #Use expected value - get reading statistics!
 
+from hand_rankings import getHandRanking
+
 #TODO: Determine hand ranking
 
 #TODO: Determine number of possible rankings above own
 #Remember to exclude own hand/community cards from other players' hands
+
+
+def expectedReturn(hand):
+    ex_val = 0
+    #TODO: Only consider player's hand initially; don't worry about chance others score higher
+    return ex_val
 
 
 def higherEquivalentRankings(hand):

@@ -1,6 +1,9 @@
 #Define player and game
 
 from hand_rankings import getHandRanking, hand_ranking_classes
+from decision import expectedValue
+import random
+import math
 
 class Player():
 
@@ -12,7 +15,34 @@ class Player():
         self.name = ""
         self.setName()
         self.num_wins = 0
+        self.risk = random.uniform(0.2, 0.8)
+        self.ev = 0
+        self.do_I_play = True
+        self.raise_val = 0
+        pass 
+    
+    def pokerEV(self, pot, check):
+        return expectedValue(pot, check, self.getBetValue())
+    
+    def getPlay(self, pot, check):
+        self.ev = self.pokerEV(pot, check)
+        self.do_I_play = self.doIPlay(self.ev)
+        if not self.do_I_play:
+            self.raise_val = self.howMuchDoIRaise(self.ev)
         pass
+    
+    def doIPlay(self,ev):
+    #This function determines whether to check or fold
+    #TODO: Make slightly more complex for bluffing/not overplaying mediocre hands
+        if ev < 0:
+            return False
+        return True
+
+    def howMuchDoIRaise(ev):
+        #This function determines whether to check or raise
+        #TODO: Make more complex, as above
+        assert ev >= 0
+        return ev
 
     def betBlind(self, num=0):
         if self.isBankrupt():
@@ -20,14 +50,21 @@ class Player():
         self.cash -= num 
         pass
 
-    def getBet(self):
+    def getBet(self, pot, check):
         if self.isBankrupt():
             return 0
-        bet = self.getBetValue()
-        if bet >= self.cash:
-            bet = self.cash
+        
+        bet = math.floor()
+
+        if self.doIFold(bet):
+            #Unsure what to do with this section
+            #When getBet is triggered, the player should intend to bet
+            #Do potential folding a step before
+            pass
+        
+        bet = self.betHowMuchDoIRaise(bet)
+
         self.cash -= bet
-        #TODO: If player is about to go bankrupt, shouldn't bet more than they have
         
         return bet
 
@@ -43,9 +80,9 @@ class Player():
     def getBetValue(self):
         #TODO: Update to make this more "intelligent"
         hand_ranking = getHandRanking(self.cards_held)
-        index = hand_ranking_classes.index(hand_ranking)
+        index = hand_ranking_classes.index(hand_ranking) + 1
         bet = 15 - index
-        return bet
+        return 1/bet
     
     def getCommunityCards(self, community_cards):
         return community_cards

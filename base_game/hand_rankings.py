@@ -350,6 +350,8 @@ def isHighCard(hand):
     
 #List them in order of precedence
 
+#TODO: Can I make these global?
+
 hand_ranking_functions = [isRoyalFlush, 
                             isStraightFlush, 
                             isFourOfAKind, 
