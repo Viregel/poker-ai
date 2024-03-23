@@ -1,6 +1,5 @@
-#Define the set of cards.
-
 from random import shuffle
+
 
 class Card():
 
@@ -15,15 +14,16 @@ class Card():
 
     def cardType(self):
         return str(self.value) + "_" + self.suite
-    
+
     def __str__(self):
         return str(self.value) + "_" + self.suite
 
+
 class CardDeck():
-     
+
     card_suits = ["hearts", "diamonds", "spades", "clubs"]
     card_values = [i for i in range(1, 14)]
-     
+
     cards = []
 
     def __init__(self):
@@ -43,9 +43,8 @@ class CardDeck():
 
     def shuffleDeck(self):
         return shuffle(self.cards_in_pack)
-    
-    def dealToPlayer(self,player,n=2):
-        #Select cards to be dealt
+
+    def dealToPlayer(self, player, n=2):
         toDeal = self.cards_in_pack[0:n]
         player.setCards(toDeal)
         for c in toDeal:
@@ -70,20 +69,17 @@ class CardDeck():
 
     def cardsDealt(self):
         return self.cards_dealt
-    
+
     def cardsInPack(self):
         return self.cards_in_pack
 
     def getCards(self):
         return self.cards
-    
+
     def getCommunityCards(self):
         return self.community_cards
-    
+
     def resetCommunityCards(self):
         for c in self.community_cards:
             self.cards_in_pack.append(c)
         self.community_cards = []
-
-
-

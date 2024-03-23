@@ -1,139 +1,120 @@
-#Define player and game
-
 from hand_rankings import getHandRanking, hand_ranking_classes
 from decision import expectedValue
 import random
-import math
+from game_data import PlayerRecord
+
 
 class Player():
 
     player_count = 1
 
+    hand_ranking_probs = [.000032,
+                          .000279,
+                          .00168,
+                          .026,
+                          .0303,
+                          .0462,
+                          .0483,
+                          .235,
+                          .438,
+                          .174]
+
     def __init__(self, starting_cash=100):
         self.cash = starting_cash
         self.cards_held = []
-        self.name = ""
-        self.setName()
+        self.name = Player.player_count
+        Player.player_count += 1
         self.num_wins = 0
-        self.risk = random.uniform(0.2, 0.8)
+        self.risk = random.uniform(1, 1.5)
         self.ev = 0
         self.do_I_play = True
         self.raise_val = 0
-        pass 
-    
-    def pokerEV(self, pot, check):
-        return expectedValue(pot, check, self.getBetValue())
-    
-    def getPlay(self, pot, check):
-        self.ev = self.pokerEV(pot, check)
-        self.do_I_play = self.doIPlay(self.ev)
-        if not self.do_I_play:
-            self.raise_val = self.howMuchDoIRaise(self.ev)
-        pass
-    
-    def doIPlay(self,ev):
-    #This function determines whether to check or fold
-    #TODO: Make slightly more complex for bluffing/not overplaying mediocre hands
-        if ev < 0:
-            return False
-        return True
+        self.is_bankrupt = False
+        self.record = PlayerRecord(self)
 
-    def howMuchDoIRaise(ev):
-        #This function determines whether to check or raise
-        #TODO: Make more complex, as above
-        assert ev >= 0
-        return ev
-
-    def betBlind(self, num=0):
-        if self.isBankrupt():
-            return 0
-        self.cash -= num 
+    def setCards(self, cards):
+        self.cards_held = cards
         pass
 
-    def getBet(self, pot, check):
-        if self.isBankrupt():
-            return 0
-        
-        bet = math.floor()
-
-        if self.doIFold(bet):
-            #Unsure what to do with this section
-            #When getBet is triggered, the player should intend to bet
-            #Do potential folding a step before
-            pass
-        
-        bet = self.betHowMuchDoIRaise(bet)
-
-        self.cash -= bet
-        
-        return bet
-
-    def fold(self):
-        #TODO
-        pass
-
-    def isBankrupt(self):
-        #TODO: If this triggers, remove player from game
-        if self.cash <= 0:
-            return True
-
-    def getBetValue(self):
-        #TODO: Update to make this more "intelligent"
-        hand_ranking = getHandRanking(self.cards_held)
-        index = hand_ranking_classes.index(hand_ranking) + 1
-        bet = 15 - index
-        return 1/bet
-    
     def getCommunityCards(self, community_cards):
         return community_cards
 
     def getCards(self):
         return self.cards_held
-    
-    def addWin(self):
-        self.num_wins += 1
+
+    def getCash(self):
+        return self.cash
+
+    def betBlind(self, num=0):
+        if self.is_bankrupt:
+            return 0
+        elif self.cash - num < 0:
+            self.is_bankrupt = True
+        else:
+            self.cash -= num
+        pass
+
+    def pokerEV(self, pot, check):
+        poker_ev = expectedValue(pot, check, self.getBetValue())
+        poker_ev = round(poker_ev)
+
+        return poker_ev
+
+    def doIPlay(self, ev):
+        if ev < 0:
+            return False
+        if self.is_bankrupt:
+            return False
+        return True
+
+    def howMuchDoIBet(self, ev, check):
+        assert ev >= 0
+        bet = max(ev, check)
+        return bet
+
+    def getBetValue(self):
+        hand_ranking = getHandRanking(self.cards_held)
+        index = hand_ranking_classes.index(hand_ranking)
+        prob_highest = 1 - sum(self.hand_ranking_probs[:index])
+        return prob_highest
+
+    def getPlay(self, pot, check):
+        self.ev = self.pokerEV(pot, check)
+        self.do_I_play = self.doIPlay(self.ev)
+        if self.do_I_play:
+            self.raise_val = self.howMuchDoIBet(self.ev, check)
+            if self.cash - self.raise_val < 0:
+                self.raise_val = self.cash
+            self.cash -= self.raise_val
         pass
 
     def addCash(self, num):
         self.cash += num
         pass
 
+    def addWin(self):
+        self.num_wins += 1
+        pass
+
     def getNumWins(self):
         return self.num_wins
-    
-    def setCards(self, cards):
-        self.cards_held = cards
+
+    def resetPlayers(self):
+        Player.player_count = 1
         pass
 
     def resetCards(self):
         self.cards_held = []
         pass
 
-    def setName(self):
-        self.name = Player.player_count
-        Player.player_count += 1
+    def addData(self, round, cash, ev, call, bet):
+        self.record.addRecord(round, cash, ev, call, bet)
         pass
-    
-    def resetPlayers(self):
-        Player.player_count = 1
+
+    def playInfo(self, pot, check):
+        print("Player", self.name)
+        print("Pot: ", pot, " Check: ", check)
+        print("Bet value: ", self.getBetValue(), "EV: ", self.ev)
+        print("Money in: ", self.raise_val)
+        print("----------------------------------")
         pass
-        
-    def getCash(self):
-        return self.cash
-
-
-
-#Store players here
-#TODO: Work into a class.
-    
-class Players():
-
-    def __init__(self, n):
-        player_list = []
-        for p in range(n):
-            newPlayer = Player()
-            self.player_list.append(newPlayer)
-        return self.player_list
-
-
-    
