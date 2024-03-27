@@ -7,7 +7,11 @@ class PokerRound():
 
     def __init__(self, players, round=0):
 
-        self.players = players
+        self.players = []
+        for p in players:
+            if not p.is_bankrupt:
+                self.players.append(p)
+
         self.round_number = round
 
         if len(self.players) >= 2:
@@ -20,10 +24,13 @@ class PokerRound():
 
             self.blind(self.players[0], 3)
             self.blind(self.players[1], 5)
+            self.makeBets(self.players[2:])
 
             self.dealToCommunity(deck)
+            self.makeBets(self.players)
 
             self.updateCommunity(deck)
+            self.makeBets(self.players)
 
             self.updateCommunity(deck)
             self.makeBets(self.players)
@@ -31,8 +38,6 @@ class PokerRound():
             self.getPlayerRankings(self.players, deck)
 
             self.winner = self.determineWinner(self.players, deck)
-
-            print("Round:", self.round_number)
 
         else:
             if len(self.players) == 1:
@@ -43,8 +48,8 @@ class PokerRound():
     def createDeck(self):
         return CardDeck()
 
-    def dealToPlayers(self, players, deck):
-        for player in players:
+    def dealToPlayers(self, player_list, deck):
+        for player in player_list:
             deck.dealToPlayer(player)
         pass
 
@@ -61,8 +66,8 @@ class PokerRound():
     def getCommunityCards(self, deck):
         return deck.getCommunityCards()
 
-    def playerAccessToCommunityCards(self, players, deck):
-        for player in players:
+    def playerAccessToCommunityCards(self, players_pool, deck):
+        for player in players_pool:
             community_cards = self.getCommunityCards(deck)
             player.getCommunityCards(community_cards)
         pass
@@ -72,19 +77,27 @@ class PokerRound():
             player.betBlind(n)
             self.addToCashPool(n)
         else:
-            pass
+            self.removeBankrupt(player)
         pass
 
-    def makeBets(self, players):
-        self.raise_cash = self.cash_pool
-        for player in players:
-            player.getPlay(self.cash_pool, self.raise_cash)
-            if player.do_I_play:
-                player_bet = player.raise_val
+    def makeBets(self, players_pool):
+        self.raise_cash = 0
+        for player in players_pool:
+            if player.cash <= 0:
+                self.removeBankrupt(player)
+            else:
+                player.getPlay(self.cash_pool, self.raise_cash)
+                if player.do_I_play:
+                    player_bet = player.raise_val
+                    self.addToCashPool(player_bet)
+                self.updatePlayerData(player)
                 if player_bet > self.raise_cash:
                     self.raise_cash = player_bet
-                self.addToCashPool(player_bet)
-            self.updatePlayerData(player)
+        pass
+
+    def removeBankrupt(self, player):
+        player.declareBankrupt()
+        self.players.remove(player)
         pass
 
     def addToCashPool(self, num):
@@ -96,21 +109,22 @@ class PokerRound():
                        player.cash,
                        player.ev,
                        self.raise_cash,
-                       player.raise_val)
+                       player.raise_val,
+                       player.do_I_play)
         pass
 
-    def getPlayerRankings(self, players, deck):
+    def getPlayerRankings(self, players_pool, deck):
         player_rankings = []
-        for player in players:
+        for player in players_pool:
             player_rankings.append(getPlayerHandRanking(player, deck))
         return player_rankings
 
-    def determineWinner(self, players, deck):
+    def determineWinner(self, players_pool, deck):
         current_highest = hand_rankings.HighCard
         current_index = hand_ranking_classes.index(current_highest)
-        winner = players[0]
+        winner = players_pool[0]
 
-        for player in players:
+        for player in players_pool:
             player_rank = getPlayerHandRanking(player, deck)
             player_index = hand_ranking_classes.index(player_rank)
             if player_index < current_index:

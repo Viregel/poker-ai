@@ -7,18 +7,27 @@ game_record.to_csv("base_game/game_records/game_record.csv")
 class PlayerRecord():
 
     def __init__(self, player):
-        cols = ["round", "cash", "ev", "call", "bet"]
-        self.player_data = pd.DataFrame(columns=cols)
+        self.player_data = pd.DataFrame()
         self.player = player
 
-    def addRecord(self, round, cash, ev, call, bet):
-        new_data = {"round": [round],
+    def addRecord(self,
+                  round_num,
+                  cash,
+                  ev,
+                  call,
+                  bet,
+                  does_play,
+                  win_prob,
+                  pot_value):
+        new_data = {"round_num": [round_num],
                     "cash": [cash],
-                    "ev": [ev],
+                    "pot_value": [pot_value],
                     "call": [call],
-                    "bet": [bet]}
-        print(new_data)
-        print("-----------------------------")
+                    "ev": [ev],
+                    "win_prob": [win_prob],
+                    "does_play": [does_play],
+                    "bet": [bet],
+                    }
         new_row = pd.DataFrame(new_data)
         self.player_data = pd.concat([self.player_data, new_row])
         pass

@@ -23,6 +23,7 @@ class Player():
         self.cash = starting_cash
         self.cards_held = []
         self.name = Player.player_count
+        self.is_forced_bet = False
         Player.player_count += 1
         self.num_wins = 0
         self.risk = random.uniform(1, 1.5)
@@ -31,6 +32,7 @@ class Player():
         self.raise_val = 0
         self.is_bankrupt = False
         self.record = PlayerRecord(self)
+        self.pot = 0
 
     def setCards(self, cards):
         self.cards_held = cards
@@ -46,22 +48,29 @@ class Player():
         return self.cash
 
     def betBlind(self, num=0):
-        if self.is_bankrupt:
-            return 0
-        elif self.cash - num < 0:
+        if self.cash - num <= 0:
             self.is_bankrupt = True
+        elif self.is_bankrupt:
+            return 0
+            # TODO: Should remove player if round happening
         else:
             self.cash -= num
         pass
 
     def pokerEV(self, pot, check):
+        self.pot = pot
         poker_ev = expectedValue(pot, check, self.getBetValue())
         poker_ev = round(poker_ev)
 
         return poker_ev
 
-    def doIPlay(self, ev):
-        if ev < 0:
+    def doIPlay(self, ev, check):
+        if self.is_forced_bet:
+            if self.is_bankrupt:
+                return False
+            else:
+                return True
+        if ev < check:
             return False
         if self.is_bankrupt:
             return False
@@ -80,7 +89,7 @@ class Player():
 
     def getPlay(self, pot, check):
         self.ev = self.pokerEV(pot, check)
-        self.do_I_play = self.doIPlay(self.ev)
+        self.do_I_play = self.doIPlay(self.ev, check)
         if self.do_I_play:
             self.raise_val = self.howMuchDoIBet(self.ev, check)
             if self.cash - self.raise_val < 0:
@@ -96,6 +105,10 @@ class Player():
         self.num_wins += 1
         pass
 
+    def declareBankrupt(self):
+        self.is_bankrupt = True
+        pass
+
     def getNumWins(self):
         return self.num_wins
 
@@ -107,8 +120,15 @@ class Player():
         self.cards_held = []
         pass
 
-    def addData(self, round, cash, ev, call, bet):
-        self.record.addRecord(round, cash, ev, call, bet)
+    def addData(self, round_num, cash, ev, call, bet, does_play):
+        self.record.addRecord(round_num,
+                              cash,
+                              ev,
+                              call,
+                              bet,
+                              does_play,
+                              round(self.getBetValue(), 3),
+                              int(self.pot))
         pass
 
     def playInfo(self, pot, check):
